@@ -1,0 +1,16 @@
+package qr_ordering_system.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class OwnerItemSalesResponse {
+
+    private Long menuItemId;
+    private String itemName;
+    private long quantity;
+    private double revenue;
+}

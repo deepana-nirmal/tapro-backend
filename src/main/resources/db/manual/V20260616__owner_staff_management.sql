@@ -1,0 +1,12 @@
+ALTER TABLE app_user
+ADD COLUMN enabled BOOLEAN;
+
+UPDATE app_user
+SET enabled = TRUE
+WHERE enabled IS NULL;
+
+ALTER TABLE app_user
+ALTER COLUMN enabled SET NOT NULL;
+
+ALTER TABLE app_user
+ALTER COLUMN enabled SET DEFAULT TRUE;

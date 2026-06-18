@@ -1,0 +1,10 @@
+target/
+uploads/
+.env
+.env.*
+!.env.example
+.DS_Store
+application-local.properties
+*.log
+.idea/
+.vscode/
