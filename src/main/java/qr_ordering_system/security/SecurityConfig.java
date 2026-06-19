@@ -1,5 +1,9 @@
 package qr_ordering_system.security;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,8 +20,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.List;
-
 import qr_ordering_system.config.TenantFilter;
 
 @Configuration
@@ -25,6 +27,9 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final TenantFilter tenantFilter;
+
+    @Value("${app.frontend-url:http://localhost:3000}")
+    private String frontendUrl;
 
     public SecurityConfig(JwtFilter jwtFilter, TenantFilter tenantFilter) {
         this.jwtFilter = jwtFilter;
@@ -42,15 +47,12 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
 
-                        // H2 Console
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public Authentication
                         .requestMatchers("/api/auth/**").permitAll()
 
-                        // Public customer menu and menu images
                         .requestMatchers(HttpMethod.GET, "/api/menu-items/restaurant/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu-items/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/images/**").permitAll()
@@ -62,28 +64,22 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
 
-                        // Invitation Flow
                         .requestMatchers("/api/invitations").hasAnyRole("OWNER", "ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/invitations/verify").permitAll()
                         .requestMatchers("/api/invitations/accept").permitAll()
 
-                        // Admin / Super Admin
                         .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
 
-                        // Owner
                         .requestMatchers("/api/owner/**")
                         .hasAnyRole("OWNER", "ADMIN", "SUPER_ADMIN")
 
-                        // Staff / Cashier
                         .requestMatchers("/api/staff/**")
                         .hasAnyRole("STAFF", "CASHIER", "ADMIN", "SUPER_ADMIN")
 
-                        // Kitchen
                         .requestMatchers("/api/kitchen/**")
                         .hasAnyRole("KITCHEN", "ADMIN", "SUPER_ADMIN")
 
-                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
@@ -106,10 +102,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",
-                "http://127.0.0.1:3000"
-        ));
+
+        List<String> allowedOrigins = new ArrayList<>();
+        allowedOrigins.add("http://localhost:3000");
+        allowedOrigins.add("http://127.0.0.1:3000");
+
+        if (frontendUrl != null && !frontendUrl.isBlank()) {
+            allowedOrigins.add(frontendUrl.trim());
+        }
+
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
