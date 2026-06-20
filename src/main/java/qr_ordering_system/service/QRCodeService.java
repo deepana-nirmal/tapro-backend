@@ -20,8 +20,8 @@ public class QRCodeService {
     private static final int WIDTH = 300;
     private static final int HEIGHT = 300;
 
-    @Value("${app.frontend-url:http://localhost:3000}")
-    private String frontendUrl = "http://localhost:3000";
+    @Value("${app.frontend-urls:http://localhost:3000,http://127.0.0.1:3000}")
+    private String frontendUrls = "http://localhost:3000,http://127.0.0.1:3000";
 
     /**
      * Generate QR code image as PNG byte array
@@ -55,7 +55,7 @@ public class QRCodeService {
      * Build frontend menu URL (non-secure version)
      */
     public String buildMenuUrl(Long restaurantId, String tableId) {
-        return frontendUrl + "/menu/" + restaurantId + "/table/" + tableId;
+        return getPrimaryFrontendUrl() + "/menu/" + restaurantId + "/table/" + tableId;
     }
 
     /**
@@ -67,5 +67,20 @@ public class QRCodeService {
 
     public String buildTableQrImageUrl(Long tableId) {
         return "/api/qr/tables/" + tableId;
+    }
+
+    private String getPrimaryFrontendUrl() {
+        if (frontendUrls == null || frontendUrls.isBlank()) {
+            return "http://localhost:3000";
+        }
+
+        for (String origin : frontendUrls.split(",")) {
+            String trimmedOrigin = origin.trim();
+            if (!trimmedOrigin.isBlank()) {
+                return trimmedOrigin;
+            }
+        }
+
+        return "http://localhost:3000";
     }
 }
