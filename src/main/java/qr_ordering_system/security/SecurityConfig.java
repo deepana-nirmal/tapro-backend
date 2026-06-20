@@ -5,6 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -27,10 +29,12 @@ import qr_ordering_system.config.TenantFilter;
 @Configuration
 public class SecurityConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
     private final JwtFilter jwtFilter;
     private final TenantFilter tenantFilter;
 
-    @Value("${app.frontend-urls:}")
+    @Value("${app.frontend-urls:http://localhost:3000,http://127.0.0.1:3000}")
     private String frontendUrls;
 
     public SecurityConfig(JwtFilter jwtFilter, TenantFilter tenantFilter) {
@@ -104,7 +108,22 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        List<String> allowedOrigins = resolveAllowedOrigins();
 
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of("Authorization"));
+
+        logger.info("Allowed CORS origins: {}", allowedOrigins);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    private List<String> resolveAllowedOrigins() {
         Set<String> allowedOrigins = new LinkedHashSet<>();
         allowedOrigins.add("http://localhost:3000");
         allowedOrigins.add("http://127.0.0.1:3000");
@@ -118,15 +137,7 @@ public class SecurityConfig {
             }
         }
 
-        configuration.setAllowedOrigins(new ArrayList<>(allowedOrigins));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Authorization"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+        return new ArrayList<>(allowedOrigins);
     }
 
     @Bean

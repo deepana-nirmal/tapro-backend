@@ -39,8 +39,8 @@ public class InvitationServiceImpl implements InvitationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    @Value("${app.frontend-url:http://localhost:3000}")
-    private String frontendUrl;
+    @Value("${app.frontend-urls:http://localhost:3000,http://127.0.0.1:3000}")
+    private String frontendUrls = "http://localhost:3000,http://127.0.0.1:3000";
 
     @Override
     public void sendInvitation(InvitationRequest request, String inviterEmail) {
@@ -74,7 +74,7 @@ public class InvitationServiceImpl implements InvitationService {
         invitationRepository.save(invitation);
 
         String inviteLink =
-                frontendUrl + "/accept-invite?token=" + token;
+                getPrimaryFrontendUrl() + "/accept-invite?token=" + token;
 
         String subject = "Tapro Invitation";
 
@@ -211,5 +211,20 @@ public class InvitationServiceImpl implements InvitationService {
         }
 
         throw new BadRequestException("This account cannot send invitations");
+    }
+
+    private String getPrimaryFrontendUrl() {
+        if (frontendUrls == null || frontendUrls.isBlank()) {
+            return "http://localhost:3000";
+        }
+
+        for (String origin : frontendUrls.split(",")) {
+            String trimmedOrigin = origin.trim();
+            if (!trimmedOrigin.isBlank()) {
+                return trimmedOrigin;
+            }
+        }
+
+        return "http://localhost:3000";
     }
 }

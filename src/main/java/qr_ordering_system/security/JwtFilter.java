@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -48,7 +49,11 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getRequestURI();
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (isPublicRoute(request)) {
             filterChain.doFilter(request, response);
             return;
@@ -126,6 +131,10 @@ public class JwtFilter extends OncePerRequestFilter {
     private boolean isPublicRoute(HttpServletRequest request) {
         String path = request.getRequestURI();
         String method = request.getMethod();
+
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
 
         if (path.startsWith("/api/auth")) {
             return true;
