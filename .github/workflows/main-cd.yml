@@ -20,8 +20,14 @@ jobs:
           java-version: 17
           cache: maven
 
+      - name: Make Maven Wrapper Executable
+        run: chmod +x ./mvnw
+
       - name: Build Jar
         run: ./mvnw clean package -DskipTests
+
+      - name: List Target Files
+        run: ls -la target
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
