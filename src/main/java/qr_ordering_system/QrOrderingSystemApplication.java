@@ -1,5 +1,7 @@
 package qr_ordering_system;
 
+import qr_ordering_system.config.EarlyStartupDiagnostics;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -9,6 +11,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class QrOrderingSystemApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(QrOrderingSystemApplication.class, args);
+        SpringApplication application = new SpringApplication(QrOrderingSystemApplication.class);
+        application.addListeners(new EarlyStartupDiagnostics());
+        application.run(args);
     }
 }
