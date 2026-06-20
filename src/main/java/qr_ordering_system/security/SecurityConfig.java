@@ -1,7 +1,9 @@
 package qr_ordering_system.security;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -28,8 +30,8 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
     private final TenantFilter tenantFilter;
 
-    @Value("${app.frontend-url:http://localhost:3000}")
-    private String frontendUrl;
+    @Value("${app.frontend-urls:}")
+    private String frontendUrls;
 
     public SecurityConfig(JwtFilter jwtFilter, TenantFilter tenantFilter) {
         this.jwtFilter = jwtFilter;
@@ -103,15 +105,20 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        List<String> allowedOrigins = new ArrayList<>();
+        Set<String> allowedOrigins = new LinkedHashSet<>();
         allowedOrigins.add("http://localhost:3000");
         allowedOrigins.add("http://127.0.0.1:3000");
 
-        if (frontendUrl != null && !frontendUrl.isBlank()) {
-            allowedOrigins.add(frontendUrl.trim());
+        if (frontendUrls != null && !frontendUrls.isBlank()) {
+            for (String origin : frontendUrls.split(",")) {
+                String trimmedOrigin = origin.trim();
+                if (!trimmedOrigin.isBlank()) {
+                    allowedOrigins.add(trimmedOrigin);
+                }
+            }
         }
 
-        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOrigins(new ArrayList<>(allowedOrigins));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
