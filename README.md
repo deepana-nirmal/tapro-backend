@@ -23,6 +23,7 @@ Spring Boot backend for the Tapro QR ordering platform.
 
 Required for production:
 
+- `SPRING_PROFILES_ACTIVE`
 - `DB_URL`
 - `DB_USERNAME`
 - `DB_PASSWORD`
@@ -40,10 +41,8 @@ Common optional variables:
 - `APP_UPLOAD_DIR`
 - `APP_EMAIL_DEV_MODE`
 - `JWT_EXPIRATION_MS`
-- `DB_DRIVER_CLASS_NAME`
 - `MAIL_AUTH`
 - `MAIL_STARTTLS_ENABLE`
-- `JPA_DDL_AUTO`
 - `JPA_SHOW_SQL`
 
 ## Database Notes
@@ -61,3 +60,17 @@ Common optional variables:
 - Configure all required environment variables in App Service configuration.
 - Persist uploads using a mounted storage path and set `APP_UPLOAD_DIR` to that location.
 - Run with `SPRING_PROFILES_ACTIVE=prod`.
+- Configure these App Settings exactly:
+
+```dotenv
+SPRING_PROFILES_ACTIVE=prod
+DB_URL=jdbc:postgresql://tapro-db.postgres.database.azure.com:5432/postgres?sslmode=require
+DB_USERNAME=taproadmin
+DB_PASSWORD=<real password>
+JWT_SECRET=<long secret>
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=<email>
+MAIL_PASSWORD=<gmail app password>
+FRONTEND_URLS=https://tapro-frontend.vercel.app,http://localhost:3000,http://127.0.0.1:3000
+```
