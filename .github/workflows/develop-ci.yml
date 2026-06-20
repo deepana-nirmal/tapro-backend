@@ -27,5 +27,5 @@ jobs:
       - name: Make Maven Wrapper Executable
         run: chmod +x ./mvnw
 
-      - name: Build Project
-        run: ./mvnw clean package -DskipTests
+      - name: Run Tests
+        run: ./mvnw clean test
