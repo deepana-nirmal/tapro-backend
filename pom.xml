@@ -85,6 +85,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- POSTGRESQL DRIVER -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- H2 (TEST DB) -->
         <dependency>
             <groupId>com.h2database</groupId>
