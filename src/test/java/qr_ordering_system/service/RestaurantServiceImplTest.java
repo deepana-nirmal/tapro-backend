@@ -18,8 +18,10 @@ import org.mockito.MockitoAnnotations;
 import qr_ordering_system.dto.RestaurantRequestDTO;
 import qr_ordering_system.dto.RestaurantResponseDTO;
 import qr_ordering_system.exception.ResourceNotFoundException;
-import qr_ordering_system.model.Restaurant;
 import qr_ordering_system.model.RestaurantStatus;
+import qr_ordering_system.model.OrderStatus;
+import qr_ordering_system.model.Restaurant;
+import qr_ordering_system.repository.OrderRepository;
 import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.repository.UserRepository;
 import qr_ordering_system.service.impl.RestaurantServiceImpl;
@@ -31,6 +33,9 @@ class RestaurantServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private OrderRepository orderRepository;
 
     @InjectMocks
     private RestaurantServiceImpl restaurantService;
@@ -66,6 +71,20 @@ class RestaurantServiceImplTest {
 
     @Test
     void testCreateRestaurant() {
+        when(orderRepository.findByTenantIdAndStatusIn(1L, List.of(
+                OrderStatus.PENDING,
+                OrderStatus.PREPARING,
+                OrderStatus.READY
+        ))).thenReturn(List.of());
+        when(orderRepository.findOrdersForRestaurant(
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.eq(List.of(OrderStatus.COMPLETED)),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull()
+        ))
+                .thenReturn(List.of());
+
         when(restaurantRepository.save(org.mockito.ArgumentMatchers.any(Restaurant.class)))
                 .thenAnswer(invocation -> {
                     Restaurant saved = invocation.getArgument(0);
@@ -82,6 +101,19 @@ class RestaurantServiceImplTest {
 
     @Test
     void testListRestaurants() {
+        when(orderRepository.findByTenantIdAndStatusIn(1L, List.of(
+                OrderStatus.PENDING,
+                OrderStatus.PREPARING,
+                OrderStatus.READY
+        ))).thenReturn(List.of());
+        when(orderRepository.findOrdersForRestaurant(
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.eq(List.of(OrderStatus.COMPLETED)),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull()
+        ))
+                .thenReturn(List.of());
         when(restaurantRepository.findAll()).thenReturn(List.of(restaurant));
 
         List<RestaurantResponseDTO> restaurants = restaurantService.getAllRestaurants();
@@ -93,6 +125,19 @@ class RestaurantServiceImplTest {
     @Test
     void testActivateRestaurant() {
         restaurant.setStatus(RestaurantStatus.SUSPENDED);
+        when(orderRepository.findByTenantIdAndStatusIn(1L, List.of(
+                OrderStatus.PENDING,
+                OrderStatus.PREPARING,
+                OrderStatus.READY
+        ))).thenReturn(List.of());
+        when(orderRepository.findOrdersForRestaurant(
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.eq(List.of(OrderStatus.COMPLETED)),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull()
+        ))
+                .thenReturn(List.of());
         when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant));
         when(restaurantRepository.save(restaurant)).thenReturn(restaurant);
 
@@ -104,6 +149,19 @@ class RestaurantServiceImplTest {
 
     @Test
     void testSuspendRestaurant() {
+        when(orderRepository.findByTenantIdAndStatusIn(1L, List.of(
+                OrderStatus.PENDING,
+                OrderStatus.PREPARING,
+                OrderStatus.READY
+        ))).thenReturn(List.of());
+        when(orderRepository.findOrdersForRestaurant(
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.eq(List.of(OrderStatus.COMPLETED)),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull()
+        ))
+                .thenReturn(List.of());
         when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant));
         when(restaurantRepository.save(restaurant)).thenReturn(restaurant);
 

@@ -24,6 +24,7 @@ import qr_ordering_system.model.Order;
 import qr_ordering_system.model.OrderStatus;
 import qr_ordering_system.repository.OrderRepository;
 import qr_ordering_system.service.NotificationService;
+import qr_ordering_system.service.OrderStatusTransitionValidator;
 import qr_ordering_system.service.impl.KitchenServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,6 +38,9 @@ class KitchenServiceTest {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private OrderStatusTransitionValidator orderStatusTransitionValidator;
 
     @InjectMocks
     private KitchenServiceImpl kitchenService;
