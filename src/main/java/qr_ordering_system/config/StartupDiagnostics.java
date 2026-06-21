@@ -20,10 +20,14 @@ public class StartupDiagnostics {
             String[] activeProfiles = environment.getActiveProfiles();
             boolean hasDbUrlEnv = environment.containsProperty("DB_URL");
             boolean hasDatasourceUrl = environment.getProperty("spring.datasource.url") != null;
+            boolean hasFrontendUrls = environment.getProperty("app.frontend-urls") != null;
+            String frontendUrls = environment.getProperty("app.frontend-urls");
 
             logger.info("Active profiles: {}", Arrays.toString(activeProfiles));
             logger.info("DB_URL present: {}", hasDbUrlEnv);
             logger.info("spring.datasource.url resolved: {}", hasDatasourceUrl);
+            logger.info("app.frontend-urls resolved: {}", hasFrontendUrls);
+            logger.info("Resolved app.frontend-urls value: {}", frontendUrls);
         };
     }
 }

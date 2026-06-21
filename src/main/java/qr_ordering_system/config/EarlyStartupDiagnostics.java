@@ -19,11 +19,14 @@ public class EarlyStartupDiagnostics implements ApplicationListener<ApplicationE
         String[] defaultProfiles = environment.getDefaultProfiles();
         String datasourceUrl = environment.getProperty("spring.datasource.url");
         String dbUrl = environment.getProperty("DB_URL");
+        String frontendUrls = environment.getProperty("app.frontend-urls");
 
         logger.info("Early startup active profiles: {}", Arrays.toString(activeProfiles));
         logger.info("Early startup default profiles: {}", Arrays.toString(defaultProfiles));
         logger.info("Early startup DB_URL present: {}", hasText(dbUrl));
         logger.info("Early startup spring.datasource.url resolved: {}", hasText(datasourceUrl));
+        logger.info("Early startup app.frontend-urls resolved: {}", hasText(frontendUrls));
+        logger.info("Early startup raw app.frontend-urls value: {}", frontendUrls);
     }
 
     private boolean hasText(String value) {
