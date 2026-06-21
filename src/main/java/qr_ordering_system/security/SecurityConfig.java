@@ -9,7 +9,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -45,16 +44,12 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PathRequest.toH2Console()).permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
                         .requestMatchers("/api/auth/**").permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
@@ -93,7 +88,6 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
         List<String> allowedOrigins = resolveAllowedOrigins();
 
         configuration.setAllowedOrigins(allowedOrigins);
@@ -131,20 +125,14 @@ public class SecurityConfig {
     }
 
     private String normalizeOrigin(String origin) {
-        if (origin == null) {
-            return "";
-        }
+        if (origin == null) return "";
 
         String normalized = origin.trim();
-
-        if (normalized.isBlank()) {
-            return "";
-        }
+        if (normalized.isBlank()) return "";
 
         if (normalized.startsWith("[") && normalized.contains("](") && normalized.endsWith(")")) {
             int closingBracket = normalized.indexOf("](");
-            String markdownUrl = normalized.substring(closingBracket + 2, normalized.length() - 1).trim();
-            normalized = markdownUrl;
+            normalized = normalized.substring(closingBracket + 2, normalized.length() - 1).trim();
         }
 
         if (normalized.startsWith("[") && normalized.endsWith("]")) {
