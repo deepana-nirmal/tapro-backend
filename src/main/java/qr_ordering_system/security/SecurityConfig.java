@@ -51,8 +51,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-
                         .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
+
                         .requestMatchers(HttpMethod.GET, "/api/menu-items/restaurant/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu-items/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/images/**").permitAll()
@@ -101,6 +101,7 @@ public class SecurityConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 
@@ -125,18 +126,14 @@ public class SecurityConfig {
     }
 
     private String normalizeOrigin(String origin) {
-        if (origin == null) return "";
-
-        String normalized = origin.trim();
-        if (normalized.isBlank()) return "";
-
-        if (normalized.startsWith("[") && normalized.contains("](") && normalized.endsWith(")")) {
-            int closingBracket = normalized.indexOf("](");
-            normalized = normalized.substring(closingBracket + 2, normalized.length() - 1).trim();
+        if (origin == null) {
+            return "";
         }
 
-        if (normalized.startsWith("[") && normalized.endsWith("]")) {
-            normalized = normalized.substring(1, normalized.length() - 1).trim();
+        String normalized = origin.trim();
+
+        if (normalized.isBlank()) {
+            return "";
         }
 
         while (normalized.endsWith("/")) {

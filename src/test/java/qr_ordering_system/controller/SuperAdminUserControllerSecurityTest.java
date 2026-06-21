@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -37,6 +38,9 @@ class SuperAdminUserControllerSecurityTest {
 
     @MockBean
     private AdminService adminService;
+
+    @MockBean
+    private JavaMailSender javaMailSender;
 
     @Test
     @WithMockUser(roles = "SUPER_ADMIN")
