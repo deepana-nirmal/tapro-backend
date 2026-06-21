@@ -83,7 +83,6 @@ public class OwnerServiceImpl implements OwnerService {
                         restaurant.getId(),
                         ACTIVE_ORDER_STATUSES,
                         null,
-                        null,
                         null
                 )
                 .stream()
@@ -103,13 +102,12 @@ public class OwnerServiceImpl implements OwnerService {
         List<OrderStatus> statuses = status != null ? List.of(status) : PAST_ORDER_STATUSES;
         validatePastOrderStatuses(statuses);
 
-        return orderRepository.findOrdersForRestaurant(
+        return filterByTableNumber(orderRepository.findOrdersForRestaurant(
                         restaurant.getId(),
                         statuses,
                         from != null ? from.atStartOfDay() : null,
-                        to != null ? to.plusDays(1).atStartOfDay() : null,
-                        normalizeFilter(tableNumber)
-                )
+                        to != null ? to.plusDays(1).atStartOfDay() : null
+                ), tableNumber)
                 .stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
@@ -352,6 +350,18 @@ public class OwnerServiceImpl implements OwnerService {
 
     private String normalizeFilter(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private List<Order> filterByTableNumber(List<Order> orders, String tableNumber) {
+        String normalized = normalizeFilter(tableNumber);
+        if (normalized == null) {
+            return orders;
+        }
+
+        return orders.stream()
+                .filter(order -> order.getTableNumber() != null
+                        && order.getTableNumber().trim().equalsIgnoreCase(normalized))
+                .collect(Collectors.toList());
     }
 
     private User getManagedStaffUser(Long userId, String currentUserEmail) {

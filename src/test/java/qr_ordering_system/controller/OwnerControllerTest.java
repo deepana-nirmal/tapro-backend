@@ -1,5 +1,6 @@
 package qr_ordering_system.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -77,5 +78,46 @@ class OwnerControllerTest {
 
         assertEquals(10L, response.getBody().getId());
         assertEquals("PREPARING", response.getBody().getStatus());
+    }
+
+    @Test
+    void testGetActiveOrders() {
+        OrderResponseDTO dto = new OrderResponseDTO();
+        dto.setId(20L);
+        dto.setStatus("PENDING");
+        dto.setTenantId(1L);
+
+        when(ownerService.getActiveOrders("owner@demo.com"))
+                .thenReturn(List.of(dto));
+
+        var response = ownerController.getActiveOrders(
+                new UsernamePasswordAuthenticationToken("owner@demo.com", "token")
+        );
+
+        assertEquals(1, response.getBody().size());
+        assertEquals("PENDING", response.getBody().get(0).getStatus());
+    }
+
+    @Test
+    void testGetPastOrders() {
+        OrderResponseDTO dto = new OrderResponseDTO();
+        dto.setId(30L);
+        dto.setStatus("COMPLETED");
+        dto.setTenantId(1L);
+        dto.setTableNumber("T9");
+
+        when(ownerService.getPastOrders("owner@demo.com", LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 21), OrderStatus.COMPLETED, "T9"))
+                .thenReturn(List.of(dto));
+
+        var response = ownerController.getPastOrders(
+                LocalDate.of(2026, 6, 1),
+                LocalDate.of(2026, 6, 21),
+                OrderStatus.COMPLETED,
+                "T9",
+                new UsernamePasswordAuthenticationToken("owner@demo.com", "token")
+        );
+
+        assertEquals(1, response.getBody().size());
+        assertEquals("T9", response.getBody().get(0).getTableNumber());
     }
 }

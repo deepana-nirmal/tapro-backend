@@ -165,7 +165,6 @@ public class RestaurantServiceImpl implements RestaurantService {
                         r.getId(),
                         List.of(OrderStatus.COMPLETED),
                         LocalDateTime.now().toLocalDate().atStartOfDay(),
-                        null,
                         null
                 )
                 .stream()

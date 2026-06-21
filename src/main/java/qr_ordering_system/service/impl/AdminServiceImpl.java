@@ -250,7 +250,7 @@ public class AdminServiceImpl implements AdminService {
     @Transactional(readOnly = true)
     public List<OrderResponseDTO> getRestaurantActiveOrders(Long restaurantId) {
         validateRestaurant(restaurantId);
-        return orderRepository.findOrdersForRestaurant(restaurantId, ACTIVE_ORDER_STATUSES, null, null, null)
+        return orderRepository.findOrdersForRestaurant(restaurantId, ACTIVE_ORDER_STATUSES, null, null)
                 .stream()
                 .map(this::toOrderResponse)
                 .toList();
@@ -270,13 +270,12 @@ public class AdminServiceImpl implements AdminService {
             throw new BadRequestException("Past orders support only COMPLETED or CANCELLED status filters");
         }
 
-        return orderRepository.findOrdersForRestaurant(
+        return filterByTableNumber(orderRepository.findOrdersForRestaurant(
                         restaurantId,
                         statuses,
                         from != null ? from.atStartOfDay() : null,
-                        to != null ? to.plusDays(1).atStartOfDay() : null,
-                        tableNumber == null || tableNumber.isBlank() ? null : tableNumber.trim()
-                )
+                        to != null ? to.plusDays(1).atStartOfDay() : null
+                ), tableNumber)
                 .stream()
                 .map(this::toOrderResponse)
                 .toList();
@@ -450,6 +449,18 @@ public class AdminServiceImpl implements AdminService {
                         .toList()
                         : List.of()
         );
+    }
+
+    private List<Order> filterByTableNumber(List<Order> orders, String tableNumber) {
+        if (tableNumber == null || tableNumber.isBlank()) {
+            return orders;
+        }
+
+        String normalized = tableNumber.trim();
+        return orders.stream()
+                .filter(order -> order.getTableNumber() != null
+                        && order.getTableNumber().trim().equalsIgnoreCase(normalized))
+                .toList();
     }
 
     private double sumRevenueSince(List<Order> orders, LocalDateTime start) {

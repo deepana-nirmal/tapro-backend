@@ -30,15 +30,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
               and o.status in :statuses
               and (:from is null or o.createdAt >= :from)
               and (:to is null or o.createdAt < :to)
-              and (:tableNumber is null or lower(o.tableNumber) = lower(:tableNumber))
             order by o.createdAt desc
             """)
     List<Order> findOrdersForRestaurant(
             @Param("tenantId") Long tenantId,
             @Param("statuses") List<OrderStatus> statuses,
             @Param("from") LocalDateTime from,
-            @Param("to") LocalDateTime to,
-            @Param("tableNumber") String tableNumber
+            @Param("to") LocalDateTime to
     );
 
     long deleteByStatusInAndCreatedAtBefore(List<OrderStatus> statuses, LocalDateTime cutoff);

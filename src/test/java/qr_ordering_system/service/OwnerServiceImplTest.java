@@ -156,7 +156,6 @@ class OwnerServiceImplTest {
                 org.mockito.ArgumentMatchers.eq(7L),
                 org.mockito.ArgumentMatchers.anyList(),
                 org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull()
         )).thenReturn(List.of(pendingOrder));
 
@@ -166,7 +165,6 @@ class OwnerServiceImplTest {
         verify(orderRepository).findOrdersForRestaurant(
                 org.mockito.ArgumentMatchers.eq(7L),
                 statusesCaptor.capture(),
-                org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull()
         );
@@ -184,7 +182,6 @@ class OwnerServiceImplTest {
         when(orderRepository.findOrdersForRestaurant(
                 org.mockito.ArgumentMatchers.eq(7L),
                 org.mockito.ArgumentMatchers.eq(List.of(OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY)),
-                org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull()
         )).thenReturn(List.of());
@@ -206,28 +203,34 @@ class OwnerServiceImplTest {
         completedOrder.setTableNumber("T9");
         completedOrder.setTotalAmount(300.0);
 
+        Order otherOrder = new Order();
+        otherOrder.setId(32L);
+        otherOrder.setTenantId(3L);
+        otherOrder.setStatus(OrderStatus.CANCELLED);
+        otherOrder.setTableNumber("B4");
+        otherOrder.setTotalAmount(150.0);
+
         when(orderRepository.findOrdersForRestaurant(
                 org.mockito.ArgumentMatchers.eq(3L),
                 org.mockito.ArgumentMatchers.anyList(),
                 org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.eq("T9")
-        )).thenReturn(List.of(completedOrder));
+                org.mockito.ArgumentMatchers.isNull()
+        )).thenReturn(List.of(completedOrder, otherOrder));
 
-        var result = ownerService.getPastOrders("owner@demo.com", null, null, null, "T9");
+        var result = ownerService.getPastOrders("owner@demo.com", null, null, null, " t9 ");
 
         ArgumentCaptor<List<OrderStatus>> statusesCaptor = ArgumentCaptor.forClass(List.class);
         verify(orderRepository).findOrdersForRestaurant(
                 org.mockito.ArgumentMatchers.eq(3L),
                 statusesCaptor.capture(),
                 org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.isNull(),
-                org.mockito.ArgumentMatchers.eq("T9")
+                org.mockito.ArgumentMatchers.isNull()
         );
 
         assertEquals(List.of(OrderStatus.COMPLETED, OrderStatus.CANCELLED), statusesCaptor.getValue());
         assertEquals(1, result.size());
         assertEquals(OrderStatus.COMPLETED.name(), result.get(0).getStatus());
+        assertEquals("T9", result.get(0).getTableNumber());
     }
 
     @Test
