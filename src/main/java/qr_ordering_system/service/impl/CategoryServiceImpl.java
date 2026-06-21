@@ -99,6 +99,14 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public List<CategoryResponseDTO> getPublicCategoriesByRestaurant(Long restaurantId) {
+        return categoryRepository.findByRestaurantIdAndVisibleTrue(restaurantId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public CategoryResponseDTO getById(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
