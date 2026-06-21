@@ -3,7 +3,11 @@ package qr_ordering_system.model;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -23,6 +27,8 @@ public class Order {
 
     private Long tenantId;
 
+    @Column(name = "table_number")
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private String tableNumber;
 
     @Enumerated(EnumType.STRING)
