@@ -93,6 +93,15 @@ public class CategoryController {
         ));
     }
 
+    @GetMapping("/public/restaurant/{id}")
+    public ResponseEntity<ApiResponse<List<CategoryResponseDTO>>> getPublicByRestaurant(@PathVariable Long id) {
+        return ResponseEntity.ok(new ApiResponse<>(
+                true,
+                "Public restaurant categories retrieved successfully",
+                categoryService.getPublicCategoriesByRestaurant(id)
+        ));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('OWNER', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<CategoryResponseDTO>> getById(@PathVariable Long id) {

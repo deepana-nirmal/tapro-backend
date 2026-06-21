@@ -152,4 +152,26 @@ public class CategoryServiceImplTest {
         assertEquals(1, res.size());
         assertEquals(5L, res.get(0).getRestaurantId());
     }
+
+    @Test
+    void getPublicCategoriesByRestaurant_returnsVisibleCategoriesOnly() {
+        Restaurant r = new Restaurant();
+        r.setId(7L);
+        r.setName("R");
+
+        Category visible = new Category();
+        visible.setId(11L);
+        visible.setName("Desserts");
+        visible.setRestaurant(r);
+        visible.setVisible(true);
+
+        when(categoryRepository.findByRestaurantIdAndVisibleTrue(7L)).thenReturn(List.of(visible));
+        when(menuItemRepository.countByCategory_Id(11L)).thenReturn(2L);
+
+        List<CategoryResponseDTO> res = service.getPublicCategoriesByRestaurant(7L);
+
+        assertEquals(1, res.size());
+        assertEquals("Desserts", res.get(0).getName());
+        assertEquals(2L, res.get(0).getMenuItemCount());
+    }
 }
