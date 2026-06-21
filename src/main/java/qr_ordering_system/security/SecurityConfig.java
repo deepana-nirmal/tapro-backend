@@ -49,17 +49,15 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.disable())
-                )
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
                 .authorizeHttpRequests(auth -> auth
-
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu-items/restaurant/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/menu-items/images/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/images/**").permitAll()
@@ -78,30 +76,16 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
 
-                        .requestMatchers("/api/owner/**")
-                        .hasAnyRole("OWNER", "ADMIN", "SUPER_ADMIN")
-
-                        .requestMatchers("/api/staff/**")
-                        .hasAnyRole("STAFF", "CASHIER", "ADMIN", "SUPER_ADMIN")
-
-                        .requestMatchers("/api/kitchen/**")
-                        .hasAnyRole("KITCHEN", "ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/owner/**").hasAnyRole("OWNER", "ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "CASHIER", "ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/kitchen/**").hasAnyRole("KITCHEN", "ADMIN", "SUPER_ADMIN")
 
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                );
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        http.addFilterBefore(
-                tenantFilter,
-                UsernamePasswordAuthenticationFilter.class
-        );
-
-        http.addFilterBefore(
-                jwtFilter,
-                UsernamePasswordAuthenticationFilter.class
-        );
+        http.addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -109,6 +93,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+
         List<String> allowedOrigins = resolveAllowedOrigins();
 
         configuration.setAllowedOrigins(allowedOrigins);
@@ -116,6 +101,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setMaxAge(3600L);
 
         logger.info("Allowed CORS origins: {}", allowedOrigins);
 
@@ -126,8 +112,9 @@ public class SecurityConfig {
 
     private List<String> resolveAllowedOrigins() {
         Set<String> allowedOrigins = new LinkedHashSet<>();
-        allowedOrigins.add(normalizeOrigin("http://localhost:3000"));
-        allowedOrigins.add(normalizeOrigin("http://127.0.0.1:3000"));
+
+        allowedOrigins.add("http://localhost:3000");
+        allowedOrigins.add("http://127.0.0.1:3000");
 
         logger.info("Raw app.frontend-urls value: {}", frontendUrls);
 
@@ -149,32 +136,33 @@ public class SecurityConfig {
         }
 
         String normalized = origin.trim();
+
         if (normalized.isBlank()) {
             return "";
         }
 
-        // Tolerate markdown-style values pasted into Azure App Settings.
         if (normalized.startsWith("[") && normalized.contains("](") && normalized.endsWith(")")) {
             int closingBracket = normalized.indexOf("](");
-            String markdownLabel = normalized.substring(1, closingBracket).trim();
             String markdownUrl = normalized.substring(closingBracket + 2, normalized.length() - 1).trim();
-            normalized = markdownUrl.isBlank() ? markdownLabel : markdownUrl;
+            normalized = markdownUrl;
         }
 
         if (normalized.startsWith("[") && normalized.endsWith("]")) {
             normalized = normalized.substring(1, normalized.length() - 1).trim();
         }
 
-        if (normalized.endsWith("/")) {
+        while (normalized.endsWith("/")) {
             normalized = normalized.substring(0, normalized.length() - 1);
         }
 
-        if (normalized.toLowerCase(Locale.ROOT).startsWith("https://")
-                || normalized.toLowerCase(Locale.ROOT).startsWith("http://")) {
+        String lower = normalized.toLowerCase(Locale.ROOT);
+
+        if (lower.startsWith("https://") || lower.startsWith("http://")) {
             return normalized;
         }
 
-        return origin.trim();
+        logger.warn("Ignoring invalid CORS origin value: {}", origin);
+        return "";
     }
 
     @Bean
@@ -183,9 +171,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration config
-    ) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 }
