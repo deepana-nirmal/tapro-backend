@@ -17,6 +17,8 @@ public interface CategoryService {
 
     List<CategoryResponseDTO> getCategoriesByRestaurant(Long restaurantId, String currentUserEmail);
 
+    List<CategoryResponseDTO> getPublicCategoriesByRestaurant(Long restaurantId);
+
     CategoryResponseDTO getById(Long id);
 
     void delete(Long id, String currentUserEmail);

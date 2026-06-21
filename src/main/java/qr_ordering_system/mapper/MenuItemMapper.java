@@ -28,6 +28,7 @@ public class MenuItemMapper {
 
         if (item.getCategory() != null) {
             dto.setCategoryId(item.getCategory().getId());
+            dto.setCategoryName(item.getCategory().getName());
         }
 
         if (item.getRestaurant() != null) {
