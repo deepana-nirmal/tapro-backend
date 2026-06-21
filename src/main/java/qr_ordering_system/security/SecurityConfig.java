@@ -3,6 +3,7 @@ package qr_ordering_system.security;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -125,19 +126,55 @@ public class SecurityConfig {
 
     private List<String> resolveAllowedOrigins() {
         Set<String> allowedOrigins = new LinkedHashSet<>();
-        allowedOrigins.add("http://localhost:3000");
-        allowedOrigins.add("http://127.0.0.1:3000");
+        allowedOrigins.add(normalizeOrigin("http://localhost:3000"));
+        allowedOrigins.add(normalizeOrigin("http://127.0.0.1:3000"));
+
+        logger.info("Raw app.frontend-urls value: {}", frontendUrls);
 
         if (frontendUrls != null && !frontendUrls.isBlank()) {
             for (String origin : frontendUrls.split(",")) {
-                String trimmedOrigin = origin.trim();
-                if (!trimmedOrigin.isBlank()) {
-                    allowedOrigins.add(trimmedOrigin);
+                String normalizedOrigin = normalizeOrigin(origin);
+                if (!normalizedOrigin.isBlank()) {
+                    allowedOrigins.add(normalizedOrigin);
                 }
             }
         }
 
         return new ArrayList<>(allowedOrigins);
+    }
+
+    private String normalizeOrigin(String origin) {
+        if (origin == null) {
+            return "";
+        }
+
+        String normalized = origin.trim();
+        if (normalized.isBlank()) {
+            return "";
+        }
+
+        // Tolerate markdown-style values pasted into Azure App Settings.
+        if (normalized.startsWith("[") && normalized.contains("](") && normalized.endsWith(")")) {
+            int closingBracket = normalized.indexOf("](");
+            String markdownLabel = normalized.substring(1, closingBracket).trim();
+            String markdownUrl = normalized.substring(closingBracket + 2, normalized.length() - 1).trim();
+            normalized = markdownUrl.isBlank() ? markdownLabel : markdownUrl;
+        }
+
+        if (normalized.startsWith("[") && normalized.endsWith("]")) {
+            normalized = normalized.substring(1, normalized.length() - 1).trim();
+        }
+
+        if (normalized.endsWith("/")) {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+
+        if (normalized.toLowerCase(Locale.ROOT).startsWith("https://")
+                || normalized.toLowerCase(Locale.ROOT).startsWith("http://")) {
+            return normalized;
+        }
+
+        return origin.trim();
     }
 
     @Bean
