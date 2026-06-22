@@ -111,6 +111,7 @@ public class SecurityConfig {
 
         allowedOrigins.add("http://localhost:3000");
         allowedOrigins.add("http://127.0.0.1:3000");
+        allowedOrigins.add("https://tapro-frontend.vercel.app");
 
         logger.info("Raw app.frontend-urls value: {}", frontendUrls);
 
