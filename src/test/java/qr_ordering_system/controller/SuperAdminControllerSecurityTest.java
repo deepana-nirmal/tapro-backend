@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -28,6 +29,7 @@ import qr_ordering_system.dto.DashboardMetricResponseDTO;
 import qr_ordering_system.dto.InvitationRequest;
 import qr_ordering_system.dto.RestaurantRequestDTO;
 import qr_ordering_system.dto.RestaurantResponseDTO;
+import qr_ordering_system.dto.SuperAdminInvitationResponseDTO;
 import qr_ordering_system.model.Role;
 import qr_ordering_system.payload.ApiResponse;
 import qr_ordering_system.service.InvitationService;
@@ -145,6 +147,57 @@ class SuperAdminControllerSecurityTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @WithMockUser(roles = "SUPER_ADMIN")
+    void superAdminCanListSuperAdminInvitations() throws Exception {
+        SuperAdminInvitationResponseDTO invitation = new SuperAdminInvitationResponseDTO();
+        invitation.setId(5L);
+        invitation.setEmail("owner@restaurant.com");
+        invitation.setRole(Role.OWNER);
+        invitation.setRestaurantId(1L);
+        invitation.setRestaurantName("Demo Restaurant");
+        invitation.setStatus("PENDING");
+
+        when(invitationService.listInvitations()).thenReturn(List.of(invitation));
+
+        mockMvc.perform(get("/api/super-admin/invitations"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].email").value("owner@restaurant.com"))
+                .andExpect(jsonPath("$.data[0].status").value("PENDING"));
+    }
+
+    @Test
+    @WithMockUser(roles = "OWNER")
+    void ownerCannotListSuperAdminInvitations() throws Exception {
+        mockMvc.perform(get("/api/super-admin/invitations"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "SUPER_ADMIN", username = "admin@tapro.com")
+    void superAdminCanSendInvitationThroughSuperAdminEndpoint() throws Exception {
+        InvitationRequest request = new InvitationRequest();
+        request.setEmail("staff@restaurant.com");
+        request.setRestaurantId(1L);
+        request.setRole(Role.STAFF);
+
+        mockMvc.perform(post("/api/super-admin/invitations")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @WithMockUser(roles = "SUPER_ADMIN")
+    void superAdminCanDeleteInvitationThroughSuperAdminEndpoint() throws Exception {
+        mockMvc.perform(delete("/api/super-admin/invitations/5").with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
     }

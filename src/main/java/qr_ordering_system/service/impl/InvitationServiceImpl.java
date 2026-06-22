@@ -2,6 +2,7 @@ package qr_ordering_system.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,7 @@ import qr_ordering_system.dto.AcceptInvitationRequest;
 import qr_ordering_system.dto.AuthResponse;
 import qr_ordering_system.dto.InvitationRequest;
 import qr_ordering_system.dto.InvitationVerifyResponse;
+import qr_ordering_system.dto.SuperAdminInvitationResponseDTO;
 import qr_ordering_system.model.Invitation;
 import qr_ordering_system.model.Role;
 import qr_ordering_system.model.Restaurant;
@@ -98,6 +100,21 @@ public class InvitationServiceImpl implements InvitationService {
                 subject,
                 body
         );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SuperAdminInvitationResponseDTO> listInvitations() {
+        return invitationRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
+    public void deleteInvitation(Long invitationId) {
+        Invitation invitation = invitationRepository.findById(invitationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Invitation not found"));
+        invitationRepository.delete(invitation);
     }
 
     @Override
@@ -226,5 +243,28 @@ public class InvitationServiceImpl implements InvitationService {
         }
 
         return "http://localhost:3000";
+    }
+
+    private SuperAdminInvitationResponseDTO toResponse(Invitation invitation) {
+        SuperAdminInvitationResponseDTO response = new SuperAdminInvitationResponseDTO();
+        response.setId(invitation.getId());
+        response.setEmail(invitation.getEmail());
+        response.setRole(invitation.getRole());
+        response.setRestaurantId(invitation.getRestaurant() != null ? invitation.getRestaurant().getId() : null);
+        response.setRestaurantName(invitation.getRestaurant() != null ? invitation.getRestaurant().getName() : null);
+        response.setStatus(resolveInvitationStatus(invitation));
+        response.setInvitationLink(getPrimaryFrontendUrl() + "/accept-invite?token=" + invitation.getToken());
+        response.setCreatedAt(invitation.getCreatedAt());
+        return response;
+    }
+
+    private String resolveInvitationStatus(Invitation invitation) {
+        if (invitation.isUsed()) {
+            return "ACCEPTED";
+        }
+        if (invitation.getExpiresAt().isBefore(LocalDateTime.now())) {
+            return "CANCELLED";
+        }
+        return "PENDING";
     }
 }
