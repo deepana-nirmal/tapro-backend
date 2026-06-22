@@ -11,6 +11,7 @@ public class OrderResponseDTO {
     private String tableNumber;
     private String status;
     private Double totalAmount;
+    private String restaurantCurrencyCode;
     private LocalDateTime orderTime;
     private List<OrderItemResponseDTO> items;
 
@@ -24,6 +25,7 @@ public class OrderResponseDTO {
                             String tableNumber,
                             String status,
                             Double totalAmount,
+                            String restaurantCurrencyCode,
                             LocalDateTime orderTime,
                             List<OrderItemResponseDTO> items) {
         this.id = id;
@@ -32,6 +34,7 @@ public class OrderResponseDTO {
         this.tableNumber = tableNumber;
         this.status = status;
         this.totalAmount = totalAmount;
+        this.restaurantCurrencyCode = restaurantCurrencyCode;
         this.orderTime = orderTime;
         this.items = items;
     }
@@ -84,6 +87,14 @@ public class OrderResponseDTO {
 
     public void setTotalAmount(Double totalAmount) {
         this.totalAmount = totalAmount;
+    }
+
+    public String getRestaurantCurrencyCode() {
+        return restaurantCurrencyCode;
+    }
+
+    public void setRestaurantCurrencyCode(String restaurantCurrencyCode) {
+        this.restaurantCurrencyCode = restaurantCurrencyCode;
     }
 
     public LocalDateTime getOrderTime() {

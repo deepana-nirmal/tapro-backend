@@ -24,6 +24,7 @@ public class MenuItemResponseDTO {
 
     private Long restaurantId;
     private String restaurantName;
+    private String restaurantCurrencyCode;
 
     public MenuItemResponseDTO() {}
 
@@ -145,5 +146,13 @@ public class MenuItemResponseDTO {
 
     public void setRestaurantName(String restaurantName) {
         this.restaurantName = restaurantName;
+    }
+
+    public String getRestaurantCurrencyCode() {
+        return restaurantCurrencyCode;
+    }
+
+    public void setRestaurantCurrencyCode(String restaurantCurrencyCode) {
+        this.restaurantCurrencyCode = restaurantCurrencyCode;
     }
 }

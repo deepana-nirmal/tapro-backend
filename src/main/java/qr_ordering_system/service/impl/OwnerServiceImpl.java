@@ -31,12 +31,14 @@ import qr_ordering_system.model.Restaurant;
 import qr_ordering_system.model.Role;
 import qr_ordering_system.model.User;
 import qr_ordering_system.repository.OrderRepository;
+import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.repository.UserRepository;
 import qr_ordering_system.service.EmailService;
 import qr_ordering_system.service.NotificationService;
 import qr_ordering_system.service.OwnerService;
 import qr_ordering_system.service.OrderStatusTransitionValidator;
 import qr_ordering_system.service.RestaurantAccessGuard;
+import qr_ordering_system.service.RestaurantCurrencySupport;
 
 @Service
 @RequiredArgsConstructor
@@ -57,6 +59,7 @@ public class OwnerServiceImpl implements OwnerService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final OrderRepository orderRepository;
+    private final RestaurantRepository restaurantRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
@@ -281,6 +284,11 @@ public class OwnerServiceImpl implements OwnerService {
     // SAFE MAPPING (FIXED)
     // =========================
     private OrderResponseDTO mapToDTO(Order order) {
+        String restaurantCurrencyCode = order.getTenantId() != null
+                ? restaurantRepository.findById(order.getTenantId())
+                        .map(restaurant -> RestaurantCurrencySupport.toApiValue(restaurant.getCurrencyCode()))
+                        .orElse(RestaurantCurrencySupport.toApiValue(null))
+                : RestaurantCurrencySupport.toApiValue(null);
 
         return new OrderResponseDTO(
                 order.getId(),
@@ -289,6 +297,7 @@ public class OwnerServiceImpl implements OwnerService {
                 order.getTableNumber(),
                 order.getStatus().name(),
                 order.getTotalAmount(),
+                restaurantCurrencyCode,
                 order.getCreatedAt(),
                 order.getItems() != null
                         ? order.getItems().stream()

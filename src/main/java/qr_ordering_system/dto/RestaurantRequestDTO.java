@@ -1,5 +1,7 @@
 package qr_ordering_system.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -39,9 +41,9 @@ public class RestaurantRequestDTO {
     @DecimalMax(value = "100.0", message = "Tax cannot exceed 100")
     private Double taxPercentage;
 
-    @NotBlank(message = "Currency is required")
-    @Size(min = 3, max = 10, message = "Currency must be between 3 and 10 characters")
-    private String currency;
+    @JsonAlias("currency")
+    @Size(min = 3, max = 3, message = "Currency code must be 3 characters")
+    private String currencyCode;
 
     @NotBlank(message = "Theme color is required")
     @Pattern(
@@ -131,12 +133,12 @@ public class RestaurantRequestDTO {
         this.taxPercentage = taxPercentage;
     }
 
-    public String getCurrency() {
-        return currency;
+    public String getCurrencyCode() {
+        return currencyCode;
     }
 
-    public void setCurrency(String currency) {
-        this.currency = currency;
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
     }
 
     public String getThemeColor() {

@@ -25,7 +25,9 @@ import qr_ordering_system.model.Role;
 import qr_ordering_system.model.User;
 import qr_ordering_system.model.Order;
 import qr_ordering_system.model.OrderStatus;
+import qr_ordering_system.model.CurrencyCode;
 import qr_ordering_system.repository.OrderRepository;
+import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.repository.UserRepository;
 import qr_ordering_system.service.EmailService;
 import qr_ordering_system.service.NotificationService;
@@ -39,6 +41,9 @@ class OwnerServiceImplTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private RestaurantRepository restaurantRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -90,6 +95,7 @@ class OwnerServiceImplTest {
 
         when(orderRepository.findByTenantId(1L))
                 .thenReturn(List.of(order));
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         List<?> result = ownerService.getAllOrders(1L, "owner@demo.com");
 
@@ -103,6 +109,7 @@ class OwnerServiceImplTest {
 
         when(orderRepository.findByTenantIdAndStatus(1L, OrderStatus.PENDING))
                 .thenReturn(List.of(order));
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         List<?> result =
                 ownerService.getOrdersByStatus(1L, OrderStatus.PENDING, "owner@demo.com");
@@ -123,6 +130,7 @@ class OwnerServiceImplTest {
 
         when(orderRepository.findById(1L))
                 .thenReturn(Optional.of(order));
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         var result = ownerService.getOrderById(1L);
 
@@ -158,6 +166,7 @@ class OwnerServiceImplTest {
                 org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull()
         )).thenReturn(List.of(pendingOrder));
+        when(restaurantRepository.findById(7L)).thenReturn(Optional.of(restaurant(7L)));
 
         var result = ownerService.getActiveOrders("owner@demo.com");
 
@@ -216,6 +225,7 @@ class OwnerServiceImplTest {
                 org.mockito.ArgumentMatchers.isNull(),
                 org.mockito.ArgumentMatchers.isNull()
         )).thenReturn(List.of(completedOrder, otherOrder));
+        when(restaurantRepository.findById(3L)).thenReturn(Optional.of(restaurant(3L)));
 
         var result = ownerService.getPastOrders("owner@demo.com", null, null, null, " t9 ");
 
@@ -242,14 +252,20 @@ class OwnerServiceImplTest {
     }
 
     private User ownerUser(Long restaurantId) {
-        Restaurant restaurant = new Restaurant();
-        restaurant.setId(restaurantId);
-        restaurant.setStatus(RestaurantStatus.ACTIVE);
+        Restaurant restaurant = restaurant(restaurantId);
 
         User user = new User();
         user.setEmail("owner@demo.com");
         user.setRole(Role.OWNER);
         user.setRestaurant(restaurant);
         return user;
+    }
+
+    private Restaurant restaurant(Long restaurantId) {
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(restaurantId);
+        restaurant.setStatus(RestaurantStatus.ACTIVE);
+        restaurant.setCurrencyCode(CurrencyCode.LKR);
+        return restaurant;
     }
 }

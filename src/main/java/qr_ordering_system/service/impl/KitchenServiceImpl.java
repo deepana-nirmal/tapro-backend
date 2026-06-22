@@ -15,9 +15,11 @@ import qr_ordering_system.exception.ResourceNotFoundException;
 import qr_ordering_system.model.Order;
 import qr_ordering_system.model.OrderStatus;
 import qr_ordering_system.repository.OrderRepository;
+import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.service.KitchenService;
 import qr_ordering_system.service.NotificationService;
 import qr_ordering_system.service.OrderStatusTransitionValidator;
+import qr_ordering_system.service.RestaurantCurrencySupport;
 
 import java.util.stream.Collectors;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -40,6 +42,7 @@ public class KitchenServiceImpl implements KitchenService {
     private static final Logger log = LoggerFactory.getLogger(KitchenServiceImpl.class);
 
     private final OrderRepository orderRepository;
+    private final RestaurantRepository restaurantRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
     private final OrderStatusTransitionValidator orderStatusTransitionValidator;
@@ -124,6 +127,11 @@ public class KitchenServiceImpl implements KitchenService {
     // DTO MAPPER
     // =========================
     private OrderResponseDTO mapToDTO(Order order) {
+        String restaurantCurrencyCode = order.getTenantId() != null
+                ? restaurantRepository.findById(order.getTenantId())
+                        .map(restaurant -> RestaurantCurrencySupport.toApiValue(restaurant.getCurrencyCode()))
+                        .orElse(RestaurantCurrencySupport.toApiValue(null))
+                : RestaurantCurrencySupport.toApiValue(null);
 
         List<OrderItemResponseDTO> items = order.getItems() != null
                 ? order.getItems().stream()
@@ -145,6 +153,7 @@ public class KitchenServiceImpl implements KitchenService {
                 order.getTableNumber(),
                 order.getStatus().name(),
                 order.getTotalAmount(),
+                restaurantCurrencyCode,
                 order.getCreatedAt(),
                 items
         );
