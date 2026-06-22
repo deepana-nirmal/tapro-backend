@@ -20,9 +20,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import qr_ordering_system.config.TenantContext;
+import qr_ordering_system.model.CurrencyCode;
 import qr_ordering_system.model.Order;
 import qr_ordering_system.model.OrderStatus;
+import qr_ordering_system.model.Restaurant;
 import qr_ordering_system.repository.OrderRepository;
+import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.service.NotificationService;
 import qr_ordering_system.service.OrderStatusTransitionValidator;
 import qr_ordering_system.service.impl.KitchenServiceImpl;
@@ -32,6 +35,9 @@ class KitchenServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private RestaurantRepository restaurantRepository;
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
@@ -68,6 +74,7 @@ class KitchenServiceTest {
                 anyLong(),
                 any(OrderStatus.class)
         )).thenReturn(List.of(order));
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         var result = kitchenService.getOrdersByStatus(OrderStatus.PENDING);
 
@@ -89,10 +96,18 @@ class KitchenServiceTest {
 
         when(orderRepository.save(any(Order.class)))
                 .thenReturn(order);
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         var result = kitchenService.updateOrderStatus(1L, OrderStatus.PREPARING);
 
         assertNotNull(result);
         assertEquals("PREPARING", result.getStatus());
+    }
+
+    private Restaurant restaurant(Long tenantId) {
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(tenantId);
+        restaurant.setCurrencyCode(CurrencyCode.LKR);
+        return restaurant;
     }
 }

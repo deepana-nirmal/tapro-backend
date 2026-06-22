@@ -45,6 +45,7 @@ class RestaurantControllerTest {
         dto.setId(1L);
         dto.setName("Harbor Table");
         dto.setStatus(RestaurantStatus.ACTIVE);
+        dto.setCurrencyCode("LKR");
         dto.setActiveOrderCount(2L);
         dto.setTodayRevenue(42.5);
 
@@ -54,6 +55,7 @@ class RestaurantControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.currencyCode").value("LKR"))
                 .andExpect(jsonPath("$.data.activeOrderCount").value(2))
                 .andExpect(jsonPath("$.data.todayRevenue").value(42.5));
     }

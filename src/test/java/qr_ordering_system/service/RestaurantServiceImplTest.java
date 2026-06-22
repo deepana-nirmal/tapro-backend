@@ -17,7 +17,9 @@ import org.mockito.MockitoAnnotations;
 
 import qr_ordering_system.dto.RestaurantRequestDTO;
 import qr_ordering_system.dto.RestaurantResponseDTO;
+import qr_ordering_system.exception.BadRequestException;
 import qr_ordering_system.exception.ResourceNotFoundException;
+import qr_ordering_system.model.CurrencyCode;
 import qr_ordering_system.model.RestaurantStatus;
 import qr_ordering_system.model.OrderStatus;
 import qr_ordering_system.model.Restaurant;
@@ -53,6 +55,7 @@ class RestaurantServiceImplTest {
         restaurant.setAddress("120 Ocean Ave");
         restaurant.setPhone("+1 555 410 9001");
         restaurant.setEmail("hello@harbortable.com");
+        restaurant.setCurrencyCode(CurrencyCode.LKR);
         restaurant.setStatus(RestaurantStatus.ACTIVE);
 
         request = new RestaurantRequestDTO();
@@ -65,7 +68,7 @@ class RestaurantServiceImplTest {
         request.setOpeningHours("Mon-Sun");
         request.setServiceChargePercentage(10.0);
         request.setTaxPercentage(8.0);
-        request.setCurrency("USD");
+        request.setCurrencyCode("USD");
         request.setThemeColor("#10b981");
     }
 
@@ -95,7 +98,44 @@ class RestaurantServiceImplTest {
 
         assertEquals("Harbor Table", response.getName());
         assertEquals(RestaurantStatus.ACTIVE, response.getStatus());
+        assertEquals("USD", response.getCurrencyCode());
         verify(restaurantRepository, times(1)).save(org.mockito.ArgumentMatchers.any(Restaurant.class));
+    }
+
+    @Test
+    void testCreateRestaurantDefaultsCurrencyToLkr() {
+        request.setCurrencyCode(null);
+
+        when(orderRepository.findByTenantIdAndStatusIn(1L, List.of(
+                OrderStatus.PENDING,
+                OrderStatus.PREPARING,
+                OrderStatus.READY
+        ))).thenReturn(List.of());
+        when(orderRepository.findOrdersForRestaurant(
+                org.mockito.ArgumentMatchers.eq(1L),
+                org.mockito.ArgumentMatchers.eq(List.of(OrderStatus.COMPLETED)),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.isNull()
+        )).thenReturn(List.of());
+        when(restaurantRepository.save(org.mockito.ArgumentMatchers.any(Restaurant.class)))
+                .thenAnswer(invocation -> {
+                    Restaurant saved = invocation.getArgument(0);
+                    saved.setId(1L);
+                    return saved;
+                });
+
+        RestaurantResponseDTO response = restaurantService.createRestaurant(request);
+
+        assertEquals("LKR", response.getCurrencyCode());
+    }
+
+    @Test
+    void testCreateRestaurantRejectsInvalidCurrency() {
+        request.setCurrencyCode("EUR");
+
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> restaurantService.createRestaurant(request));
+
+        assertEquals("Invalid currency code. Supported currencies: LKR, USD", exception.getMessage());
     }
 
     @Test
@@ -208,5 +248,6 @@ class RestaurantServiceImplTest {
         assertEquals(1L, response.getId());
         assertEquals(2L, response.getActiveOrderCount());
         assertEquals(42.5, response.getTodayRevenue());
+        assertEquals("LKR", response.getCurrencyCode());
     }
 }

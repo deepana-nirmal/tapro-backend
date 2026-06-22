@@ -92,7 +92,7 @@ class SuperAdminControllerSecurityTest {
         request.setAddress("1 Main Street");
         request.setPhone("+1 555 555 5555");
         request.setEmail("demo@restaurant.com");
-        request.setCurrency("USD");
+        request.setCurrencyCode("USD");
         request.setThemeColor("#10b981");
         request.setServiceChargePercentage(0.0);
         request.setTaxPercentage(0.0);
@@ -103,6 +103,7 @@ class SuperAdminControllerSecurityTest {
         response.setAddress("1 Main Street");
         response.setPhone("+1 555 555 5555");
         response.setEmail("demo@restaurant.com");
+        response.setCurrencyCode("USD");
 
         when(restaurantService.createRestaurant(any(RestaurantRequestDTO.class))).thenReturn(response);
 
@@ -112,7 +113,8 @@ class SuperAdminControllerSecurityTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.name").value("Demo Restaurant"));
+                .andExpect(jsonPath("$.data.name").value("Demo Restaurant"))
+                .andExpect(jsonPath("$.data.currencyCode").value("USD"));
     }
 
     @Test
@@ -123,7 +125,7 @@ class SuperAdminControllerSecurityTest {
         request.setAddress("1 Main Street");
         request.setPhone("+1 555 555 5555");
         request.setEmail("demo@restaurant.com");
-        request.setCurrency("USD");
+        request.setCurrencyCode("USD");
         request.setThemeColor("#10b981");
         request.setServiceChargePercentage(0.0);
         request.setTaxPercentage(0.0);

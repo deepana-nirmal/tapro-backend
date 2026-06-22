@@ -13,7 +13,7 @@ public class RestaurantResponseDTO {
     private String openingHours;
     private Double serviceChargePercentage;
     private Double taxPercentage;
-    private String currency;
+    private String currencyCode;
     private String themeColor;
     private RestaurantStatus status;
     private Long activeOrderCount;
@@ -33,7 +33,7 @@ public class RestaurantResponseDTO {
             String openingHours,
             Double serviceChargePercentage,
             Double taxPercentage,
-            String currency,
+            String currencyCode,
             String themeColor,
             RestaurantStatus status,
             Long activeOrderCount,
@@ -48,7 +48,7 @@ public class RestaurantResponseDTO {
         this.openingHours = openingHours;
         this.serviceChargePercentage = serviceChargePercentage;
         this.taxPercentage = taxPercentage;
-        this.currency = currency;
+        this.currencyCode = currencyCode;
         this.themeColor = themeColor;
         this.status = status;
         this.activeOrderCount = activeOrderCount;
@@ -135,12 +135,12 @@ public class RestaurantResponseDTO {
         this.taxPercentage = taxPercentage;
     }
 
-    public String getCurrency() {
-        return currency;
+    public String getCurrencyCode() {
+        return currencyCode;
     }
 
-    public void setCurrency(String currency) {
-        this.currency = currency;
+    public void setCurrencyCode(String currencyCode) {
+        this.currencyCode = currencyCode;
     }
 
     public String getThemeColor() {

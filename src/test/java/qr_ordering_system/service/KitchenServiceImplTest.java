@@ -22,18 +22,24 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import qr_ordering_system.config.TenantContext;
 import qr_ordering_system.exception.BadRequestException;
+import qr_ordering_system.model.CurrencyCode;
 import qr_ordering_system.model.Order;
 import qr_ordering_system.model.OrderStatus;
 import qr_ordering_system.repository.OrderRepository;
+import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.service.NotificationService;
 import qr_ordering_system.service.OrderStatusTransitionValidator;
 import qr_ordering_system.service.impl.KitchenServiceImpl;
+import qr_ordering_system.model.Restaurant;
 
 @ExtendWith(MockitoExtension.class)
 class KitchenServiceImplTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private RestaurantRepository restaurantRepository;
 
     @Mock
     private SimpMessagingTemplate messagingTemplate;
@@ -68,6 +74,7 @@ class KitchenServiceImplTest {
 
         when(orderRepository.findByTenantIdAndStatus(1L, OrderStatus.PENDING))
                 .thenReturn(List.of(order));
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         var result = kitchenService.getOrdersByStatus(OrderStatus.PENDING);
 
@@ -89,6 +96,7 @@ class KitchenServiceImplTest {
 
         when(orderRepository.save(any(Order.class)))
                 .thenReturn(order);
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         var result = kitchenService.updateOrderStatus(1L, OrderStatus.PREPARING);
 
@@ -109,6 +117,7 @@ class KitchenServiceImplTest {
                 OrderStatus.PREPARING,
                 OrderStatus.READY
         ))).thenReturn(List.of(order));
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         var result = kitchenService.getKitchenOrders();
 
@@ -150,9 +159,17 @@ class KitchenServiceImplTest {
                 .thenReturn(Optional.of(order));
         when(orderRepository.save(any(Order.class)))
                 .thenReturn(order);
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L)));
 
         var result = kitchenService.updateOrderStatus(5L, OrderStatus.COMPLETED);
 
         assertEquals(OrderStatus.COMPLETED.name(), result.getStatus());
+    }
+
+    private Restaurant restaurant(Long tenantId) {
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(tenantId);
+        restaurant.setCurrencyCode(CurrencyCode.LKR);
+        return restaurant;
     }
 }

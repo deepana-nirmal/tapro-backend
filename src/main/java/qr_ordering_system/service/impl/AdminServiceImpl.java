@@ -42,6 +42,7 @@ import qr_ordering_system.repository.UserRepository;
 import qr_ordering_system.service.AdminService;
 import qr_ordering_system.service.CategoryService;
 import qr_ordering_system.service.MenuItemService;
+import qr_ordering_system.service.RestaurantCurrencySupport;
 import qr_ordering_system.service.TableService;
 
 @Service
@@ -428,6 +429,12 @@ public class AdminServiceImpl implements AdminService {
     }
 
     private OrderResponseDTO toOrderResponse(Order order) {
+        String restaurantCurrencyCode = order.getTenantId() != null
+                ? restaurantRepository.findById(order.getTenantId())
+                        .map(restaurant -> RestaurantCurrencySupport.toApiValue(restaurant.getCurrencyCode()))
+                        .orElse(RestaurantCurrencySupport.toApiValue(null))
+                : RestaurantCurrencySupport.toApiValue(null);
+
         return new OrderResponseDTO(
                 order.getId(),
                 order.getTenantId(),
@@ -435,6 +442,7 @@ public class AdminServiceImpl implements AdminService {
                 order.getTableNumber(),
                 order.getStatus().name(),
                 order.getTotalAmount(),
+                restaurantCurrencyCode,
                 order.getCreatedAt(),
                 order.getItems() != null
                         ? order.getItems().stream()

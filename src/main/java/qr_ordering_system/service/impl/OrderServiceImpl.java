@@ -26,10 +26,12 @@ import qr_ordering_system.model.OrderItem;
 import qr_ordering_system.model.OrderStatus;
 import qr_ordering_system.repository.MenuItemRepository;
 import qr_ordering_system.repository.OrderRepository;
+import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.service.RestaurantAccessGuard;
 import qr_ordering_system.service.EmailService;
 import qr_ordering_system.service.NotificationService;
 import qr_ordering_system.service.OrderService;
+import qr_ordering_system.service.RestaurantCurrencySupport;
 
 @Service
 @Transactional
@@ -40,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final MenuItemRepository menuItemRepository;
+    private final RestaurantRepository restaurantRepository;
 
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
@@ -280,6 +283,11 @@ public class OrderServiceImpl implements OrderService {
     // MAPPER
     // =========================
     private OrderResponseDTO mapToDTO(Order order) {
+        String restaurantCurrencyCode = order.getTenantId() != null
+                ? restaurantRepository.findById(order.getTenantId())
+                        .map(restaurant -> RestaurantCurrencySupport.toApiValue(restaurant.getCurrencyCode()))
+                        .orElse(RestaurantCurrencySupport.toApiValue(null))
+                : RestaurantCurrencySupport.toApiValue(null);
 
         List<OrderItemResponseDTO> items = order.getItems() != null
                 ? order.getItems().stream()
@@ -301,6 +309,7 @@ public class OrderServiceImpl implements OrderService {
                 order.getTableNumber(),
                 order.getStatus().name(),
                 order.getTotalAmount(),
+                restaurantCurrencyCode,
                 order.getCreatedAt(),
                 items
         );

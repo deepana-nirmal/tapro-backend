@@ -23,6 +23,7 @@ import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.repository.UserRepository;
 import qr_ordering_system.service.RestaurantLogoService;
 import qr_ordering_system.service.RestaurantService;
+import qr_ordering_system.service.RestaurantCurrencySupport;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +51,7 @@ public class RestaurantServiceImpl implements RestaurantService {
         r.setOpeningHours(dto.getOpeningHours());
         r.setServiceChargePercentage(dto.getServiceChargePercentage());
         r.setTaxPercentage(dto.getTaxPercentage());
-        r.setCurrency(dto.getCurrency());
+        r.setCurrencyCode(RestaurantCurrencySupport.resolveCurrencyCode(dto.getCurrencyCode()));
         r.setThemeColor(dto.getThemeColor());
         r.setStatus(RestaurantStatus.ACTIVE);
 
@@ -96,7 +97,7 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurant.setOpeningHours(dto.getOpeningHours());
         restaurant.setServiceChargePercentage(dto.getServiceChargePercentage());
         restaurant.setTaxPercentage(dto.getTaxPercentage());
-        restaurant.setCurrency(dto.getCurrency());
+        restaurant.setCurrencyCode(RestaurantCurrencySupport.resolveCurrencyCode(dto.getCurrencyCode()));
         restaurant.setThemeColor(dto.getThemeColor());
 
         return mapToDTO(repository.save(restaurant));
@@ -182,7 +183,7 @@ public class RestaurantServiceImpl implements RestaurantService {
                 r.getOpeningHours(),
                 r.getServiceChargePercentage(),
                 r.getTaxPercentage(),
-                r.getCurrency(),
+                RestaurantCurrencySupport.toApiValue(r.getCurrencyCode()),
                 r.getThemeColor(),
                 r.getStatus(),
                 activeOrderCount,
