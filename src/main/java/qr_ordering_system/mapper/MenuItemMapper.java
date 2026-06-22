@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import qr_ordering_system.dto.MenuItemResponseDTO;
 import qr_ordering_system.model.MenuItem;
+import qr_ordering_system.service.RestaurantCurrencySupport;
 
 @Component
 public class MenuItemMapper {
@@ -34,6 +35,7 @@ public class MenuItemMapper {
         if (item.getRestaurant() != null) {
             dto.setRestaurantId(item.getRestaurant().getId());
             dto.setRestaurantName(item.getRestaurant().getName());
+            dto.setRestaurantCurrencyCode(RestaurantCurrencySupport.toApiValue(item.getRestaurant().getCurrencyCode()));
         }
 
         return dto;

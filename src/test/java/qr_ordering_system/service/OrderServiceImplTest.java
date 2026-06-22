@@ -32,8 +32,10 @@ import qr_ordering_system.model.MenuItemStatus;
 import qr_ordering_system.model.Order;
 import qr_ordering_system.model.OrderStatus;
 import qr_ordering_system.model.Restaurant;
+import qr_ordering_system.model.CurrencyCode;
 import qr_ordering_system.repository.MenuItemRepository;
 import qr_ordering_system.repository.OrderRepository;
+import qr_ordering_system.repository.RestaurantRepository;
 import qr_ordering_system.service.RestaurantAccessGuard;
 import qr_ordering_system.service.impl.OrderServiceImpl;
 
@@ -42,6 +44,7 @@ class OrderServiceImplTest {
 
     @Mock private OrderRepository orderRepository;
     @Mock private MenuItemRepository menuItemRepository;
+    @Mock private RestaurantRepository restaurantRepository;
     @Mock private SimpMessagingTemplate messagingTemplate;
     @Mock private NotificationService notificationService;
     @Mock private EmailService emailService;
@@ -70,6 +73,7 @@ class OrderServiceImplTest {
         menuItem.setStatus(MenuItemStatus.AVAILABLE);
         Restaurant restaurant = new Restaurant();
         restaurant.setId(1L);
+        restaurant.setCurrencyCode(CurrencyCode.LKR);
         menuItem.setRestaurant(restaurant);
 
         when(menuItemRepository.findById(1L))
@@ -77,6 +81,7 @@ class OrderServiceImplTest {
 
         when(orderRepository.save(any(Order.class)))
                 .thenAnswer(i -> i.getArgument(0));
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant));
 
         OrderRequestDTO request = new OrderRequestDTO();
         request.setRestaurantId(1L);
@@ -123,10 +128,12 @@ class OrderServiceImplTest {
         menuItem.setStatus(MenuItemStatus.AVAILABLE);
         Restaurant restaurant = new Restaurant();
         restaurant.setId(5L);
+        restaurant.setCurrencyCode(CurrencyCode.USD);
         menuItem.setRestaurant(restaurant);
 
         when(menuItemRepository.findById(1L)).thenReturn(Optional.of(menuItem));
         when(orderRepository.save(any(Order.class))).thenAnswer(i -> i.getArgument(0));
+        when(restaurantRepository.findById(5L)).thenReturn(Optional.of(restaurant));
 
         OrderRequestDTO request = new OrderRequestDTO();
         request.setRestaurantId(5L);
@@ -155,6 +162,7 @@ class OrderServiceImplTest {
         order.setTenantId(1L);
         order.setStatus(OrderStatus.PENDING);
         order.setItems(new ArrayList<>());
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L, CurrencyCode.LKR)));
 
         when(orderRepository.findById(1L))
                 .thenReturn(Optional.of(order));
@@ -176,6 +184,7 @@ class OrderServiceImplTest {
 
         when(orderRepository.findById(4L)).thenReturn(Optional.of(order));
         when(orderRepository.findByIdAndTenantId(4L, 1L)).thenReturn(Optional.of(order));
+        when(restaurantRepository.findById(1L)).thenReturn(Optional.of(restaurant(1L, CurrencyCode.LKR)));
 
         OrderResponseDTO response = orderService.getPublicOrderById(1L, 4L);
 
@@ -198,6 +207,13 @@ class OrderServiceImplTest {
 
         assertThrows(ResourceNotFoundException.class, () -> orderService.getPublicOrderById(1L, 4L));
         verify(orderRepository).findByIdAndTenantId(eq(4L), eq(1L));
+    }
+
+    private Restaurant restaurant(Long id, CurrencyCode currencyCode) {
+        Restaurant restaurant = new Restaurant();
+        restaurant.setId(id);
+        restaurant.setCurrencyCode(currencyCode);
+        return restaurant;
     }
 
     private OrderItemDTO orderItem(Long menuItemId, int quantity) {

@@ -3,6 +3,7 @@ package qr_ordering_system.model;
 import java.time.LocalDate;
 import java.util.List;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -27,7 +28,9 @@ public class Restaurant {
     private String openingHours;
     private Double serviceChargePercentage = 0.0;
     private Double taxPercentage = 0.0;
-    private String currency = "USD";
+    @Column(name = "currency_code", nullable = false, length = 3)
+    @Enumerated(EnumType.STRING)
+    private CurrencyCode currencyCode = CurrencyCode.LKR;
     private String themeColor = "#10b981";
 
     // =========================
@@ -150,12 +153,12 @@ public class Restaurant {
         this.taxPercentage = taxPercentage;
     }
 
-    public String getCurrency() {
-        return currency;
+    public CurrencyCode getCurrencyCode() {
+        return currencyCode;
     }
 
-    public void setCurrency(String currency) {
-        this.currency = currency;
+    public void setCurrencyCode(CurrencyCode currencyCode) {
+        this.currencyCode = currencyCode;
     }
 
     public String getThemeColor() {

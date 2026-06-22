@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import qr_ordering_system.model.CurrencyCode;
 import qr_ordering_system.model.Restaurant;
 import qr_ordering_system.model.Role;
 import qr_ordering_system.model.User;
@@ -93,7 +94,7 @@ public class DataSeeder {
             restaurant.setOpeningHours("Mon-Sun: 11:00 - 23:00");
             restaurant.setServiceChargePercentage(10.0);
             restaurant.setTaxPercentage(8.0);
-            restaurant.setCurrency("USD");
+            restaurant.setCurrencyCode(CurrencyCode.LKR);
             restaurant.setThemeColor("#10b981");
             return restaurantRepo.save(restaurant);
         });
