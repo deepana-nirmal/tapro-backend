@@ -19,6 +19,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmailAndIdNot(String email, Long id);
 
+    long countByRole(Role role);
+
     @Query("select u from User u left join fetch u.restaurant")
     List<User> findAllWithRestaurant();
 }

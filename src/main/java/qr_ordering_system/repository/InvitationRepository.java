@@ -1,6 +1,7 @@
 package qr_ordering_system.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,4 +17,6 @@ public interface InvitationRepository extends JpaRepository<Invitation, Long> {
     boolean existsByEmailAndUsedFalse(String email);
 
     boolean existsByEmailAndUsedFalseAndExpiresAtAfter(String email, LocalDateTime expiresAt);
+
+    List<Invitation> findAllByOrderByCreatedAtDesc();
 }
