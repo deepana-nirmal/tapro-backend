@@ -4,15 +4,20 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -24,6 +29,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import qr_ordering_system.config.TenantContext;
 import qr_ordering_system.config.TenantFilter;
 
 @Configuration
@@ -33,13 +39,15 @@ public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
     private final TenantFilter tenantFilter;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.frontend-urls:http://localhost:3000,http://127.0.0.1:3000}")
     private String frontendUrls;
 
-    public SecurityConfig(JwtFilter jwtFilter, TenantFilter tenantFilter) {
+    public SecurityConfig(JwtFilter jwtFilter, TenantFilter tenantFilter, ObjectMapper objectMapper) {
         this.jwtFilter = jwtFilter;
         this.tenantFilter = tenantFilter;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -48,6 +56,26 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            logSecurityFailure("Authentication failed", request.getMethod(), request.getRequestURI());
+                            response.setStatus(403);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            objectMapper.writeValue(response.getWriter(), Map.of(
+                                    "message", "Authentication required",
+                                    "error", "Forbidden"
+                            ));
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            logSecurityFailure("Access denied", request.getMethod(), request.getRequestURI());
+                            response.setStatus(403);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            objectMapper.writeValue(response.getWriter(), Map.of(
+                                    "message", accessDeniedException.getMessage(),
+                                    "error", "Forbidden"
+                            ));
+                        })
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
@@ -71,6 +99,7 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/admin/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users/by-restaurant").hasRole("SUPER_ADMIN")
 
                         .requestMatchers("/api/owner/**").hasAnyRole("OWNER", "ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "CASHIER", "ADMIN", "SUPER_ADMIN")
@@ -160,5 +189,19 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    private void logSecurityFailure(String prefix, String method, String path) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        logger.warn(
+                "{} for {} {} principal={} authorities={} tenantId={}",
+                prefix,
+                method,
+                path,
+                authentication != null ? authentication.getName() : null,
+                authentication != null ? authentication.getAuthorities() : List.of(),
+                TenantContext.getTenantId()
+        );
     }
 }
