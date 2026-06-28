@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import qr_ordering_system.dto.SuperAdminUserRequestDTO;
 import qr_ordering_system.dto.SuperAdminUserResponseDTO;
+import qr_ordering_system.dto.UsersByRestaurantResponseDTO;
 import qr_ordering_system.model.Role;
 import qr_ordering_system.service.AdminService;
 
@@ -67,6 +68,19 @@ class SuperAdminUserControllerSecurityTest {
     void ownerCannotGetUsers() throws Exception {
         mockMvc.perform(get("/api/super-admin/users"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "SUPER_ADMIN")
+    void superAdminCanGetUsersByRestaurantThroughCompatibilityEndpoint() throws Exception {
+        UsersByRestaurantResponseDTO group = new UsersByRestaurantResponseDTO(10L, "KFC Colombo");
+
+        when(adminService.getUsersByRestaurant()).thenReturn(List.of(group));
+
+        mockMvc.perform(get("/api/users/by-restaurant"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].restaurantName").value("KFC Colombo"));
     }
 
     @Test
