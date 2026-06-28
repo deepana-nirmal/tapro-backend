@@ -2,11 +2,14 @@ package qr_ordering_system.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -140,24 +143,30 @@ class RestaurantServiceImplTest {
 
     @Test
     void testListRestaurants() {
-        when(orderRepository.findByTenantIdAndStatusIn(1L, List.of(
-                OrderStatus.PENDING,
-                OrderStatus.PREPARING,
-                OrderStatus.READY
-        ))).thenReturn(List.of());
-        when(orderRepository.findOrdersForRestaurant(
-                org.mockito.ArgumentMatchers.eq(1L),
-                org.mockito.ArgumentMatchers.eq(List.of(OrderStatus.COMPLETED)),
-                org.mockito.ArgumentMatchers.any(),
-                org.mockito.ArgumentMatchers.isNull()
-        ))
-                .thenReturn(List.of());
         when(restaurantRepository.findAll()).thenReturn(List.of(restaurant));
+        when(orderRepository.countOrdersByTenantIdsAndStatusesAsMap(
+                List.of(1L),
+                List.of(OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY)
+        )).thenReturn(Map.of(1L, 2L));
+        when(orderRepository.sumRevenueByTenantIdsAndStatusesAndCreatedAtBetweenAsMap(
+                org.mockito.ArgumentMatchers.eq(List.of(1L)),
+                org.mockito.ArgumentMatchers.eq(List.of(OrderStatus.COMPLETED)),
+                org.mockito.ArgumentMatchers.any(LocalDateTime.class),
+                org.mockito.ArgumentMatchers.any(LocalDateTime.class)
+        )).thenReturn(Map.of(1L, 84.0));
 
         List<RestaurantResponseDTO> restaurants = restaurantService.getAllRestaurants();
 
         assertEquals(1, restaurants.size());
         assertEquals("Harbor Table", restaurants.get(0).getName());
+        assertEquals(2L, restaurants.get(0).getActiveOrderCount());
+        assertEquals(84.0, restaurants.get(0).getTodayRevenue());
+        verify(orderRepository, never()).findOrdersForRestaurant(
+                org.mockito.ArgumentMatchers.anyLong(),
+                org.mockito.ArgumentMatchers.anyList(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any()
+        );
     }
 
     @Test
