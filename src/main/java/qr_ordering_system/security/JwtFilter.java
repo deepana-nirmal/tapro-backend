@@ -1,13 +1,13 @@
 package qr_ordering_system.security;
 
 import java.io.IOException;
-import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -27,6 +27,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -93,6 +95,16 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 restaurantAccessGuard.ensureRestaurantAccessAllowed(user);
             } catch (Exception ex) {
+                logger.warn(
+                        "Access denied in JwtFilter for {} {} user={} dbRole={} authorities={} tenantId={}: {}",
+                        request.getMethod(),
+                        request.getRequestURI(),
+                        user.getEmail(),
+                        user.getRole(),
+                        userDetails.getAuthorities(),
+                        TenantContext.getTenantId(),
+                        ex.getMessage()
+                );
                 SecurityContextHolder.clearContext();
                 TenantContext.clear();
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -108,14 +120,11 @@ public class JwtFilter extends OncePerRequestFilter {
                 TenantContext.setTenantId(user.getRestaurant().getId());
             }
 
-            // ✅ FIXED ROLE MAPPING (IMPORTANT PART)
-            String role = jwtUtil.extractRole(token);
-
             UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
-                            List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                            userDetails.getAuthorities()
                     );
 
             authToken.setDetails(
@@ -123,6 +132,17 @@ public class JwtFilter extends OncePerRequestFilter {
             );
 
             SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            logger.debug(
+                    "Authenticated {} for {} {} with tokenRole={} dbRole={} authorities={} tenantId={}",
+                    email,
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    jwtUtil.extractRole(token),
+                    user.getRole(),
+                    userDetails.getAuthorities(),
+                    TenantContext.getTenantId()
+            );
         }
 
         filterChain.doFilter(request, response);
