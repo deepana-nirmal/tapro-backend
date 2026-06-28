@@ -2,6 +2,7 @@ package qr_ordering_system.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,12 @@ import qr_ordering_system.service.RestaurantService;
 public class RestaurantServiceImpl implements RestaurantService {
 
     private static final Logger log = LoggerFactory.getLogger(RestaurantServiceImpl.class);
+    private static final List<OrderStatus> ACTIVE_ORDER_STATUSES = List.of(
+            OrderStatus.PENDING,
+            OrderStatus.PREPARING,
+            OrderStatus.READY
+    );
+    private static final List<OrderStatus> COMPLETED_ORDER_STATUSES = List.of(OrderStatus.COMPLETED);
 
     private final RestaurantRepository repository;
     private final UserRepository userRepository;
@@ -59,7 +66,35 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public List<RestaurantResponseDTO> getAllRestaurants() {
-        return repository.findAll().stream().map(this::mapToDTO).toList();
+        List<Restaurant> restaurants = repository.findAll();
+        if (restaurants.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> tenantIds = restaurants.stream()
+                .map(Restaurant::getId)
+                .toList();
+        LocalDateTime todayStart = LocalDateTime.now().toLocalDate().atStartOfDay();
+        LocalDateTime tomorrowStart = todayStart.plusDays(1);
+
+        Map<Long, Long> activeOrderCounts = orderRepository.countOrdersByTenantIdsAndStatusesAsMap(
+                tenantIds,
+                ACTIVE_ORDER_STATUSES
+        );
+        Map<Long, Double> todayRevenueByTenant = orderRepository.sumRevenueByTenantIdsAndStatusesAndCreatedAtBetweenAsMap(
+                tenantIds,
+                COMPLETED_ORDER_STATUSES,
+                todayStart,
+                tomorrowStart
+        );
+
+        return restaurants.stream()
+                .map(restaurant -> mapToDTO(
+                        restaurant,
+                        activeOrderCounts.getOrDefault(restaurant.getId(), 0L),
+                        todayRevenueByTenant.getOrDefault(restaurant.getId(), 0D)
+                ))
+                .toList();
     }
 
     @Override
@@ -158,19 +193,24 @@ public class RestaurantServiceImpl implements RestaurantService {
     private RestaurantResponseDTO mapToDTO(Restaurant r) {
         long activeOrderCount = orderRepository.findByTenantIdAndStatusIn(
                 r.getId(),
-                List.of(OrderStatus.PENDING, OrderStatus.PREPARING, OrderStatus.READY)
+                ACTIVE_ORDER_STATUSES
         ).size();
+        LocalDateTime todayStart = LocalDateTime.now().toLocalDate().atStartOfDay();
 
         double todayRevenue = orderRepository.findOrdersForRestaurant(
                         r.getId(),
-                        List.of(OrderStatus.COMPLETED),
-                        LocalDateTime.now().toLocalDate().atStartOfDay(),
+                        COMPLETED_ORDER_STATUSES,
+                        todayStart,
                         null
                 )
                 .stream()
                 .mapToDouble(order -> order.getTotalAmount() != null ? order.getTotalAmount() : 0D)
                 .sum();
 
+        return mapToDTO(r, activeOrderCount, todayRevenue);
+    }
+
+    private RestaurantResponseDTO mapToDTO(Restaurant r, long activeOrderCount, double todayRevenue) {
         return new RestaurantResponseDTO(
                 r.getId(),
                 r.getName(),
